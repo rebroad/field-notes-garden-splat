@@ -63,7 +63,7 @@ export function createViewer(host) {
     camera.updateMatrixWorld(true);
     const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
     const up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
-    center.addScaledVector(right, dx * unitsPerPixel);
+    center.addScaledVector(right, -dx * unitsPerPixel);
     center.addScaledVector(up, dy * unitsPerPixel);
     updateCamera();
   }
@@ -195,7 +195,7 @@ export function createViewer(host) {
     if (gesture.mode === 'pan') {
       panBy(dx, dy);
     } else {
-      yaw -= dx * 0.005;
+      yaw += dx * 0.005;
       pitch -= dy * 0.005;
       updateCamera();
     }
