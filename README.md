@@ -26,6 +26,9 @@ npm run preview
 
 ## GitHub Pages
 
+Controls: drag to orbit; hold Shift while dragging, or drag with two fingers,
+to pan; pinch to zoom; tap a visible part of the scene to center it.
+
 Pushes to `main` run tests and deploy the static build. Relative asset paths
 support the project Pages URL. The published viewer and garden scene are
 publicly downloadable; the working/research repository remains separate.

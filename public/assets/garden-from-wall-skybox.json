@@ -1,0 +1,6 @@
+{
+  "projection": "vertical-cubemap-atlas",
+  "cubemap": {
+    "order": ["py", "pz", "ny", "nx", "px", "nz"]
+  }
+}

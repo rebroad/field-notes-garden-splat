@@ -14,7 +14,7 @@ function errorMessage(error) {
   return error instanceof Error ? error.message : String(error ?? 'Unknown error');
 }
 
-async function openFile(file, initialView) {
+async function openFile(file, initialView, skybox = null) {
   if (!file || loading) return;
   loading = true;
   status.textContent = `Loading ${file.name}…`;
@@ -23,6 +23,7 @@ async function openFile(file, initialView) {
       .then((module) => module.createViewer(host))
       .catch((error) => { loadScene = undefined; throw error; });
     const viewer = await loadScene;
+    await viewer.setSkybox(skybox);
     const nextUrl = URL.createObjectURL(file);
     try {
       await viewer.open(nextUrl, file.name, initialView);
@@ -45,17 +46,24 @@ picker.addEventListener('change', () => openFile(picker.files?.[0]));
 
 async function loadGarden() {
   try {
-    const [sceneResponse, metadataResponse] = await Promise.all([
+    const [sceneResponse, metadataResponse, skyboxMetadataResponse] = await Promise.all([
       fetch('./assets/garden-from-wall.splat'),
       fetch('./assets/garden-from-wall.json'),
+      fetch('./assets/garden-from-wall-skybox.json'),
     ]);
     if (!sceneResponse.ok) throw new Error(`Garden scene request failed (${sceneResponse.status}).`);
     if (!metadataResponse.ok) throw new Error(`Garden metadata request failed (${metadataResponse.status}).`);
-    const [scene, metadata] = await Promise.all([
+    if (!skyboxMetadataResponse.ok) throw new Error('Garden sky metadata request failed (' + skyboxMetadataResponse.status + ').');
+    const [scene, metadata, skyboxMetadata] = await Promise.all([
       sceneResponse.blob(),
       metadataResponse.json(),
+      skyboxMetadataResponse.json(),
     ]);
-    await openFile(new File([scene], 'garden-from-wall.splat'), initialViewFromMetadata(metadata));
+    const skybox = {
+      url: './assets/garden-from-wall-skybox.jpg',
+      faceOrder: skyboxMetadata.cubemap.order,
+    };
+    await openFile(new File([scene], 'garden-from-wall.splat'), initialViewFromMetadata(metadata), skybox);
   } catch (error) {
     status.textContent = `Could not load the garden: ${errorMessage(error)}`;
   }

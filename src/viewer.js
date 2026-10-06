@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { SparkRenderer, SplatFileType, SplatMesh } from '@sparkjsdev/spark';
+import { loadSkybox } from './skybox.js';
 
 export function createViewer(host) {
   const scene = new THREE.Scene();
@@ -12,14 +13,16 @@ export function createViewer(host) {
   host.append(renderer.domElement);
 
   let activeSplat;
+  let activeSkybox;
   let center = new THREE.Vector3();
-  let dragging = false;
-  let lastX = 0;
-  let lastY = 0;
   let yaw = 0;
   let pitch = 0;
   let distance = 3;
   let frameRequested = false;
+  const pointers = new Map();
+  const raycaster = new THREE.Raycaster();
+  const pointerNdc = new THREE.Vector2();
+  let gesture;
 
   function render() {
     if (frameRequested) return;
@@ -50,6 +53,53 @@ export function createViewer(host) {
       center.z + distance * Math.cos(yaw) * Math.cos(pitch),
     );
     camera.lookAt(center);
+    render();
+  }
+
+  function panBy(dx, dy) {
+    const height = renderer.domElement.clientHeight;
+    if (!height) return;
+    const unitsPerPixel = 2 * distance * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / height;
+    camera.updateMatrixWorld(true);
+    const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
+    const up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
+    center.addScaledVector(right, -dx * unitsPerPixel);
+    center.addScaledVector(up, dy * unitsPerPixel);
+    updateCamera();
+  }
+
+  function centerAt(clientX, clientY) {
+    if (!activeSplat) return false;
+    const rect = renderer.domElement.getBoundingClientRect();
+    if (!rect.width || !rect.height) return false;
+    pointerNdc.set(
+      ((clientX - rect.left) / rect.width) * 2 - 1,
+      -((clientY - rect.top) / rect.height) * 2 + 1,
+    );
+    camera.updateMatrixWorld(true);
+    activeSplat.updateWorldMatrix(true, false);
+    raycaster.setFromCamera(pointerNdc, camera);
+    const hit = raycaster.intersectObject(activeSplat, false)[0];
+    if (!hit) return false;
+    center.copy(hit.point);
+    updateCamera();
+    return true;
+  }
+
+  async function setSkybox(skybox) {
+    activeSkybox?.dispose();
+    activeSkybox = undefined;
+    scene.background = new THREE.Color('#101410');
+    if (!skybox) {
+      render();
+      return;
+    }
+    try {
+      activeSkybox = await loadSkybox(skybox.url, skybox.faceOrder);
+      scene.background = activeSkybox;
+    } catch (error) {
+      console.warn('Could not load garden skybox:', error);
+    }
     render();
   }
 
@@ -86,20 +136,98 @@ export function createViewer(host) {
   }
 
   renderer.domElement.addEventListener('pointerdown', (event) => {
-    dragging = true;
-    lastX = event.clientX;
-    lastY = event.clientY;
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY, type: event.pointerType });
     renderer.domElement.setPointerCapture(event.pointerId);
+    if (pointers.size === 1) {
+      gesture = {
+        mode: event.shiftKey ? 'pan' : 'orbit',
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        lastX: event.clientX,
+        lastY: event.clientY,
+        moved: false,
+      };
+      return;
+    }
+    const touches = [...pointers.entries()].filter(([, point]) => point.type === 'touch');
+    if (touches.length === 2) {
+      const [[id1, first], [id2, second]] = touches;
+      gesture = {
+        mode: 'touch-pan',
+        pointerIds: [id1, id2],
+        centerX: (first.x + second.x) / 2,
+        centerY: (first.y + second.y) / 2,
+        span: Math.hypot(first.x - second.x, first.y - second.y),
+      };
+    } else {
+      gesture = undefined;
+    }
   });
-  renderer.domElement.addEventListener('pointerup', () => { dragging = false; });
-  renderer.domElement.addEventListener('pointercancel', () => { dragging = false; });
   renderer.domElement.addEventListener('pointermove', (event) => {
-    if (!dragging) return;
-    yaw -= (event.clientX - lastX) * 0.005;
-    pitch -= (event.clientY - lastY) * 0.005;
-    lastX = event.clientX;
-    lastY = event.clientY;
-    updateCamera();
+    const point = pointers.get(event.pointerId);
+    if (!point) return;
+    point.x = event.clientX;
+    point.y = event.clientY;
+
+    if (gesture?.mode === 'touch-pan') {
+      const [first, second] = gesture.pointerIds.map((id) => pointers.get(id));
+      if (!first || !second) return;
+      const centerX = (first.x + second.x) / 2;
+      const centerY = (first.y + second.y) / 2;
+      const span = Math.hypot(first.x - second.x, first.y - second.y);
+      panBy(centerX - gesture.centerX, centerY - gesture.centerY);
+      if (span > 0 && gesture.span > 0) {
+        distance = THREE.MathUtils.clamp(distance * gesture.span / span, 0.2, 100);
+        updateCamera();
+      }
+      gesture.centerX = centerX;
+      gesture.centerY = centerY;
+      gesture.span = span;
+      return;
+    }
+
+    if (!gesture || gesture.pointerId !== event.pointerId || pointers.size !== 1) return;
+    const dx = event.clientX - gesture.lastX;
+    const dy = event.clientY - gesture.lastY;
+    if (Math.hypot(event.clientX - gesture.startX, event.clientY - gesture.startY) > 7) gesture.moved = true;
+    if (event.shiftKey) gesture.mode = 'pan';
+    if (gesture.mode === 'pan') {
+      panBy(dx, dy);
+    } else {
+      yaw -= dx * 0.005;
+      pitch -= dy * 0.005;
+      updateCamera();
+    }
+    gesture.lastX = event.clientX;
+    gesture.lastY = event.clientY;
+  });
+  renderer.domElement.addEventListener('pointerup', (event) => {
+    const canCenter = pointers.size === 1
+      && gesture?.mode === 'orbit'
+      && gesture.pointerId === event.pointerId
+      && !gesture.moved
+      && !event.shiftKey;
+    if (canCenter) centerAt(event.clientX, event.clientY);
+    pointers.delete(event.pointerId);
+    if (pointers.size === 1) {
+      const [pointerId, point] = pointers.entries().next().value;
+      gesture = {
+        mode: 'orbit',
+        pointerId,
+        startX: point.x,
+        startY: point.y,
+        lastX: point.x,
+        lastY: point.y,
+        moved: true,
+      };
+    } else {
+      gesture = undefined;
+    }
+  });
+  renderer.domElement.addEventListener('pointercancel', (event) => {
+    pointers.delete(event.pointerId);
+    gesture = undefined;
   });
   renderer.domElement.addEventListener('wheel', (event) => {
     distance = Math.max(0.2, Math.min(100, distance * Math.exp(event.deltaY * 0.001)));
@@ -107,6 +235,7 @@ export function createViewer(host) {
   }, { passive: true });
 
   return {
+    setSkybox,
     async open(url, fileName, initialView) {
       const fileType = fileName.toLowerCase().endsWith('.splat') ? SplatFileType.SPLAT : undefined;
       const candidate = new SplatMesh({ url, fileName, fileType });

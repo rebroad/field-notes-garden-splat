@@ -21,6 +21,12 @@ formats may be selected from local storage.
 
 ## Performance choices
 
+The distant sky is separate from the splat points. A six-face vertical atlas is
+reordered into a Three.js cube texture and used as the scene background, so it
+stays at infinity while the camera moves. Pointer gestures orbit; Shift-drag or
+two-touch drag pans, pinch zooms, and a short tap ray-picks a splat to set the
+new camera focus.
+
 The app avoids a framework and UI component library. The renderer is dynamically
 imported after page load, and device pixel ratio is capped at 1.5 to limit
 mobile fill-rate and memory use. The scene is delivered in an interoperable,

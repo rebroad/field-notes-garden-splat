@@ -10,6 +10,7 @@ copyright notices are available from the installed packages and upstream
 repositories.
 
 The included Garden from Wall scene was supplied by its creator for this demo.
+The separate garden skybox was supplied as part of the same authorized capture.
 It is distributed as standard `.splat` scene data, separately from the software
 license. The public repository does not contain the source capture decoder or
 Luma website assets.
