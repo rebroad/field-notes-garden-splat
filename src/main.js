@@ -23,13 +23,13 @@ async function openScene(url, fileName, fileSize, initialView, skybox = null, te
       .then((module) => module.createViewer(host))
       .catch((error) => { loadScene = undefined; throw error; });
     const viewer = await loadScene;
-    void viewer.setSkybox(skybox);
     try {
       await viewer.open(url, fileName, initialView);
     } catch (error) {
       if (temporaryUrl) URL.revokeObjectURL(url);
       throw error;
     }
+    void viewer.setSkybox(skybox);
     if (activeUrl) URL.revokeObjectURL(activeUrl);
     activeUrl = temporaryUrl ? url : undefined;
     emptyState.hidden = true;
