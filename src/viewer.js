@@ -237,12 +237,16 @@ export function createViewer(host) {
   return {
     setSkybox,
     async open(url, fileName, initialView) {
-      const fileType = fileName.toLowerCase().endsWith('.splat') ? SplatFileType.SPLAT : undefined;
+      const extension = fileName.toLowerCase().split('.').at(-1);
+      const fileType = extension === 'splat' ? SplatFileType.SPLAT
+        : extension === 'spz' ? SplatFileType.SPZ : undefined;
       const candidate = new SplatMesh({ url, fileName, fileType });
       await openCandidate(candidate, fileName, initialView);
     },
     async openBuffer(buffer, fileName, initialView) {
-      const fileType = fileName.toLowerCase().endsWith('.splat') ? SplatFileType.SPLAT : undefined;
+      const extension = fileName.toLowerCase().split('.').at(-1);
+      const fileType = extension === 'splat' ? SplatFileType.SPLAT
+        : extension === 'spz' ? SplatFileType.SPZ : undefined;
       const candidate = new SplatMesh({ fileBytes: buffer, fileName, fileType });
       await openCandidate(candidate, fileName, initialView);
     },

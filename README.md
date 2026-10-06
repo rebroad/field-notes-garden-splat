@@ -33,8 +33,10 @@ Pushes to `main` run tests and deploy the static build. Relative asset paths
 support the project Pages URL. The published viewer and garden scene are
 publicly downloadable; the working/research repository remains separate.
 
-The garden scene contains about 1.1 million splats and is approximately 35 MB
-uncompressed. Browser loading and rendering performance depends on the device.
+The garden scene contains about 1.1 million splats and is published as a
+compressed, open SPZ asset (about 15.4 MB), reducing the automatic scene download
+from the 35 MB uncompressed SPLAT form. Browser loading and rendering performance
+depends on the device.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the renderer design,
 [MULTIPLAYER.md](MULTIPLAYER.md) for a future multiplayer architecture, and
