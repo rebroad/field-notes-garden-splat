@@ -1,0 +1,19 @@
+{
+  "name": "field-notes-garden-splat",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@sparkjsdev/spark": "2.3.1",
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "vite": "7.3.7"
+  }
+}

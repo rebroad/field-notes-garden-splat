@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101410" />
+    <meta name="description" content="Explore Garden from Wall in an open Gaussian-splat viewer." />
+    <title>Field Notes — Garden from Wall</title>
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <a class="wordmark" href="./" aria-label="Field Notes home"><span class="mark">F</span> FIELD NOTES</a>
+        <div class="actions">
+          <label class="load-button" for="scene-file">Open scene</label>
+        </div>
+        <input id="scene-file" type="file" accept=".spz,.ply,.splat,.ksplat,.sog" hidden />
+      </header>
+      <section class="stage" aria-label="Interactive 3D scene">
+        <div id="scene" class="scene"></div>
+        <div id="empty-state" class="empty-state">
+          <p class="eyebrow">A place, held in light</p>
+          <h1>Garden from Wall</h1>
+          <p>Loading the garden capture…</p>
+        </div>
+        <p id="status" class="status" role="status">Preparing garden scene…</p>
+      </section>
+      <footer class="caption">
+        <div><h2>Garden from Wall</h2><p>Captured by @rebroad · October 3, 2026</p></div>
+        <p class="controls">Drag to look · Scroll to move</p>
+      </footer>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
