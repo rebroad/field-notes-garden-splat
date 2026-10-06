@@ -1,6 +1,16 @@
 import * as THREE from 'three';
 
 const THREE_FACE_ORDER = ['px', 'nx', 'py', 'ny', 'pz', 'nz'];
+// The capture uses downward-positive Y, matching the viewer camera's up=(0,-1,0).
+// Three.js cube textures use upward-positive Y, so swap the vertical faces.
+const CAPTURE_FACE_FOR_THREE = {
+  px: 'px',
+  nx: 'nx',
+  py: 'ny',
+  ny: 'py',
+  pz: 'pz',
+  nz: 'nz',
+};
 
 export function cubeFaceIndices(atlasOrder) {
   if (!Array.isArray(atlasOrder)
@@ -9,7 +19,7 @@ export function cubeFaceIndices(atlasOrder) {
     || THREE_FACE_ORDER.some((face) => !atlasOrder.includes(face))) {
     throw new Error('Skybox face order must contain px, nx, py, ny, pz, and nz exactly once.');
   }
-  return THREE_FACE_ORDER.map((face) => atlasOrder.indexOf(face));
+  return THREE_FACE_ORDER.map((face) => atlasOrder.indexOf(CAPTURE_FACE_FOR_THREE[face]));
 }
 
 export function cubeTextureFromAtlas(image, atlasOrder) {

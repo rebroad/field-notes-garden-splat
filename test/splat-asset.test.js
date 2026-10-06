@@ -26,7 +26,7 @@ test('garden metadata supplies a valid initial camera view', async () => {
 });
 
 test('maps the captured vertical cubemap face order to Three.js order', () => {
-  assert.deepEqual(cubeFaceIndices(['py', 'pz', 'ny', 'nx', 'px', 'nz']), [4, 3, 0, 2, 1, 5]);
+  assert.deepEqual(cubeFaceIndices(['py', 'pz', 'ny', 'nx', 'px', 'nz']), [4, 3, 2, 0, 1, 5]);
   assert.throws(() => cubeFaceIndices(['py', 'pz', 'ny', 'nx', 'px', 'px']), /exactly once/);
 });
 
@@ -36,6 +36,6 @@ test('skybox metadata describes the six-face vertical atlas', async () => {
     'utf8',
   ));
   assert.equal(skyboxMetadata.projection, 'vertical-cubemap-atlas');
-  assert.deepEqual(cubeFaceIndices(skyboxMetadata.cubemap.order), [4, 3, 0, 2, 1, 5]);
+  assert.deepEqual(cubeFaceIndices(skyboxMetadata.cubemap.order), [4, 3, 2, 0, 1, 5]);
   assert.ok((await fs.stat(new URL('../public/assets/garden-from-wall-skybox.jpg', import.meta.url))).size > 0);
 });

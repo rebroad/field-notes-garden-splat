@@ -23,7 +23,7 @@ async function openFile(file, initialView, skybox = null) {
       .then((module) => module.createViewer(host))
       .catch((error) => { loadScene = undefined; throw error; });
     const viewer = await loadScene;
-    await viewer.setSkybox(skybox);
+    void viewer.setSkybox(skybox);
     const nextUrl = URL.createObjectURL(file);
     try {
       await viewer.open(nextUrl, file.name, initialView);
